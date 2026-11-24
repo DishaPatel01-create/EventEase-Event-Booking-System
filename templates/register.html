@@ -1,0 +1,172 @@
+{% extends 'base.html' %}
+
+{% block title %}Create Account - {{ app_name }}{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-md-7 col-lg-6">
+            <div class="card border-0 shadow-xl rounded-4 p-4 p-md-5">
+                <div class="text-center mb-4">
+                    <img src="{{ url_for('static', filename='images/logo.svg') }}" alt="{{ app_name }}" height="42" class="mb-3">
+                    <h3 class="fw-bold mb-1">Create your {{ app_name }} account</h3>
+                    <p class="text-muted small">Choose account type and start discovering or hosting experiences</p>
+                </div>
+
+                <form method="POST" action="{{ url_for('auth.register') }}">
+                    <!-- Role Selection Cards (Attendee vs Organizer only) -->
+                    <div class="mb-4">
+                        <label class="form-label small fw-bold mb-2">Choose account type:</label>
+                        <div class="row g-2">
+                            <div class="col-6">
+                                <input type="radio" class="btn-check" name="role" id="role-attendee" value="attendee" {% if role != 'organizer' %}checked{% endif %}>
+                                <label class="btn btn-outline-primary w-100 p-3 text-start rounded-3 h-100" for="role-attendee">
+                                    <i class="fa-solid fa-user fs-4 d-block mb-1"></i>
+                                    <strong class="d-block">Attendee</strong>
+                                    <small class="text-muted">Book events & tickets</small>
+                                </label>
+                            </div>
+                            <div class="col-6">
+                                <input type="radio" class="btn-check" name="role" id="role-organizer" value="organizer" {% if role == 'organizer' %}checked{% endif %}>
+                                <label class="btn btn-outline-primary w-100 p-3 text-start rounded-3 h-100" for="role-organizer">
+                                    <i class="fa-solid fa-bullhorn fs-4 d-block mb-1"></i>
+                                    <strong class="d-block">Organizer</strong>
+                                    <small class="text-muted">Create & manage events</small>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Full Name -->
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold" for="reg-name">Full Name *</label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-light"><i class="fa-solid fa-user text-muted"></i></span>
+                            <input type="text" id="reg-name" name="name" value="{{ name or '' }}" class="form-control" placeholder="Enter your full name" autocomplete="name" required autofocus>
+                        </div>
+                    </div>
+
+                    <!-- Email Address -->
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold" for="reg-email">Email Address *</label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-light"><i class="fa-solid fa-envelope text-muted"></i></span>
+                            <input type="email" id="reg-email" name="email" value="{{ email or '' }}" class="form-control" placeholder="Enter your email address" autocomplete="email" required>
+                        </div>
+                    </div>
+
+                    <!-- Phone Number -->
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold" for="reg-phone">Mobile Phone Number *</label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-light fw-bold text-muted">+91</span>
+                            <input type="tel" id="reg-phone" name="phone" value="{{ phone or '' }}" class="form-control" placeholder="10-digit mobile number (e.g. 9876543210)" pattern="[0-9]{10}" maxlength="10" autocomplete="tel" required>
+                        </div>
+                        <div class="form-text small text-muted">A valid 10-digit Indian mobile number for ticket confirmations.</div>
+                    </div>
+
+                    <!-- Password Field with Show/Hide and Strength Meter -->
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold" for="reg-password">Password (Minimum 8 characters) *</label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-light"><i class="fa-solid fa-lock text-muted"></i></span>
+                            <input type="password" id="reg-password" name="password" class="form-control" placeholder="Create a strong password" minlength="8" autocomplete="new-password" required>
+                            <button type="button" class="btn btn-outline-secondary toggle-password-btn" data-target="reg-password" title="Show/Hide Password">
+                                <i class="fa-solid fa-eye-slash"></i>
+                            </button>
+                        </div>
+                        <!-- Client-side Password Strength Indicator Bar -->
+                        <div class="progress mt-2" style="height: 4px;">
+                            <div id="password-strength-bar" class="progress-bar bg-danger" role="progressbar" style="width: 0%;"></div>
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center mt-1">
+                            <span class="small text-muted" id="password-strength-text">Password strength: None</span>
+                            <span class="small text-muted">Min. 8 chars</span>
+                        </div>
+                    </div>
+
+                    <!-- Confirm Password -->
+                    <div class="mb-4">
+                        <label class="form-label small fw-bold" for="reg-confirm-password">Confirm Password *</label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-light"><i class="fa-solid fa-lock-open text-muted"></i></span>
+                            <input type="password" id="reg-confirm-password" name="confirm_password" class="form-control" placeholder="Re-enter your password" minlength="8" autocomplete="new-password" required>
+                            <button type="button" class="btn btn-outline-secondary toggle-password-btn" data-target="reg-confirm-password" title="Show/Hide Password">
+                                <i class="fa-solid fa-eye-slash"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary w-100 py-2 fw-bold mb-3 shadow">
+                        Create Account <i class="fa-solid fa-arrow-right ms-1"></i>
+                    </button>
+                </form>
+
+                <div class="text-center mt-3 small text-muted">
+                    Already have an account? <a href="{{ url_for('auth.login') }}" class="fw-bold text-primary">Sign In</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% block extra_scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    // 1. Password visibility togglers
+    document.querySelectorAll('.toggle-password-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const targetId = this.getAttribute('data-target');
+            const input = document.getElementById(targetId);
+            const icon = this.querySelector('i');
+            
+            if (input.type === 'password') {
+                input.type = 'text';
+                icon.classList.remove('fa-eye-slash');
+                icon.classList.add('fa-eye');
+            } else {
+                input.type = 'password';
+                icon.classList.remove('fa-eye');
+                icon.classList.add('fa-eye-slash');
+            }
+        });
+    });
+
+    // 2. Client-side Password Strength Evaluator (UI helper only)
+    const pwdInput = document.getElementById('reg-password');
+    const strengthBar = document.getElementById('password-strength-bar');
+    const strengthText = document.getElementById('password-strength-text');
+
+    if (pwdInput && strengthBar && strengthText) {
+        pwdInput.addEventListener('input', () => {
+            const val = pwdInput.value;
+            let score = 0;
+
+            if (val.length >= 8) score++;
+            if (/[A-Z]/.test(val)) score++;
+            if (/[0-9]/.test(val)) score++;
+            if (/[^A-Za-z0-9]/.test(val)) score++;
+
+            if (val.length === 0) {
+                strengthBar.style.width = '0%';
+                strengthBar.className = 'progress-bar bg-danger';
+                strengthText.textContent = 'Password strength: None';
+            } else if (score <= 1) {
+                strengthBar.style.width = '25%';
+                strengthBar.className = 'progress-bar bg-danger';
+                strengthText.textContent = 'Password strength: Weak';
+            } else if (score === 2 || score === 3) {
+                strengthBar.style.width = '65%';
+                strengthBar.className = 'progress-bar bg-warning';
+                strengthText.textContent = 'Password strength: Medium';
+            } else {
+                strengthBar.style.width = '100%';
+                strengthBar.className = 'progress-bar bg-success';
+                strengthText.textContent = 'Password strength: Strong';
+            }
+        });
+    }
+});
+</script>
+{% endblock %}
+{% endblock %}

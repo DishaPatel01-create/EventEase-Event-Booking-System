@@ -1,0 +1,235 @@
+{% extends 'base.html' %}
+
+{% block title %}My Bookings - {{ app_name }}{% endblock %}
+
+{% block content %}
+<div class="bg-white border-bottom py-4">
+    <div class="container">
+        <h1 class="h3 fw-bold mb-1"><i class="fa-solid fa-ticket text-primary me-2"></i> My Bookings</h1>
+        <p class="text-muted mb-0 small">Manage your event reservations, digital tickets, and cancellation requests.</p>
+    </div>
+</div>
+
+<div class="container py-4">
+    <!-- Tabs Navigation -->
+    <ul class="nav nav-pills mb-4 gap-2" id="bookingsTab" role="tablist">
+        <li class="nav-item" role="presentation">
+            <button class="nav-link active px-4 rounded-pill" id="upcoming-tab" data-bs-toggle="tab" data-bs-target="#upcoming-pane" type="button" role="tab">
+                Upcoming ({{ upcoming | length }})
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link px-4 rounded-pill" id="completed-tab" data-bs-toggle="tab" data-bs-target="#completed-pane" type="button" role="tab">
+                Completed ({{ completed | length }})
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link px-4 rounded-pill" id="cancelled-tab" data-bs-toggle="tab" data-bs-target="#cancelled-pane" type="button" role="tab">
+                Cancelled & Refunded ({{ cancelled | length }})
+            </button>
+        </li>
+    </ul>
+
+    <!-- Tab Contents -->
+    <div class="tab-content" id="bookingsTabContent">
+        <!-- 1. UPCOMING TAB -->
+        <div class="tab-pane fade show active" id="upcoming-pane" role="tabpanel">
+            {% if upcoming %}
+                <div class="row g-4">
+                    {% for b in upcoming %}
+                    <div class="col-lg-6">
+                        <div class="card border-0 shadow-sm rounded-4 h-100 overflow-hidden">
+                            <div class="row g-0 h-100">
+                                <div class="col-sm-4 bg-light">
+                                    <img src="{{ b.event.image }}" alt="{{ b.event.title }}" class="img-fluid h-100 w-100" style="object-fit: cover; min-height: 180px;">
+                                </div>
+                                <div class="col-sm-8 d-flex flex-column justify-content-between p-3 p-md-4">
+                                    <div>
+                                        <div class="d-flex justify-content-between align-items-start mb-1">
+                                            <span class="badge bg-primary-subtle text-primary small">{{ b.event.category.name if b.event.category else 'Event' }}</span>
+                                            <span class="badge bg-success-subtle text-success small"><i class="fa-solid fa-circle-check"></i> Confirmed</span>
+                                        </div>
+                                        <h5 class="fw-bold mb-1">
+                                            <a href="{{ url_for('events.details', event_id=b.event_id) }}" class="text-dark">{{ b.event.title }}</a>
+                                        </h5>
+                                        <div class="small text-muted mb-2">
+                                            <i class="fa-regular fa-calendar me-1"></i> {{ b.event.formatted_date }} &bull; {{ b.event.start_time }}
+                                        </div>
+                                        <div class="small text-muted mb-2">
+                                            <i class="fa-solid fa-location-dot me-1"></i> {{ b.event.venue }}, {{ b.event.city }}
+                                        </div>
+                                        <div class="small fw-semibold text-secondary">
+                                            Ref: <span class="font-monospace text-primary">{{ b.booking_reference }}</span> &bull; {{ b.total_quantity }} Ticket(s)
+                                        </div>
+                                    </div>
+
+                                    <div class="d-flex justify-content-between align-items-center mt-3 pt-3 border-top">
+                                        <span class="fw-bold text-dark fs-6">{{ b.total_amount | currency }}</span>
+                                        <div class="d-flex gap-2">
+                                            <a href="{{ url_for('booking.digital_ticket', booking_ref=b.booking_reference) }}" class="btn btn-sm btn-primary">
+                                                <i class="fa-solid fa-ticket me-1"></i> Ticket
+                                            </a>
+                                            {% if b.is_cancellable %}
+                                            <button type="button" class="btn btn-sm btn-outline-danger" data-bs-toggle="modal" data-bs-target="#cancelModal-{{ b.id }}">
+                                                Cancel
+                                            </button>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Cancellation Modal -->
+                        {% if b.is_cancellable %}
+                        <div class="modal fade" id="cancelModal-{{ b.id }}" tabindex="-1" aria-hidden="true">
+                            <div class="modal-dialog modal-dialog-centered">
+                                <div class="modal-content border-0 shadow-lg rounded-4">
+                                    <div class="modal-header border-bottom p-4">
+                                        <h5 class="modal-title fw-bold text-danger">
+                                            <i class="fa-solid fa-triangle-exclamation me-2"></i> Cancel Booking
+                                        </h5>
+                                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                    </div>
+                                    <form action="{{ url_for('booking.cancel_booking', booking_ref=b.booking_reference) }}" method="POST">
+                                        <div class="modal-body p-4">
+                                            <p>Are you sure you want to cancel your booking for <strong>{{ b.event.title }}</strong>?</p>
+                                            <div class="bg-light p-3 rounded-3 mb-3 small">
+                                                <div class="d-flex justify-content-between mb-1">
+                                                    <span>Booking Ref:</span>
+                                                    <span class="font-monospace fw-bold">{{ b.booking_reference }}</span>
+                                                </div>
+                                                <div class="d-flex justify-content-between mb-1">
+                                                    <span>Refund Amount:</span>
+                                                    <span class="fw-bold text-success">{{ b.total_amount | currency }}</span>
+                                                </div>
+                                                <div class="d-flex justify-content-between">
+                                                    <span>Refund Destination:</span>
+                                                    <span>Original Payment Source (Simulated)</span>
+                                                </div>
+                                            </div>
+
+                                            <div class="mb-3">
+                                                <label class="form-label small fw-bold">Reason for Cancellation</label>
+                                                <select name="reason" class="form-select form-select-sm">
+                                                    <option>Change of plans / Schedule conflict</option>
+                                                    <option>Booked by mistake</option>
+                                                    <option>Travel / Health issue</option>
+                                                    <option>Other personal reasons</option>
+                                                </select>
+                                            </div>
+                                        </div>
+                                        <div class="modal-footer border-top p-3">
+                                            <button type="button" class="btn btn-sm btn-secondary" data-bs-dismiss="modal">Keep Booking</button>
+                                            <button type="submit" class="btn btn-sm btn-danger fw-bold">Confirm & Request Refund</button>
+                                        </div>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                        {% endif %}
+                    </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div class="card border-0 shadow-sm rounded-4 p-5 text-center my-3">
+                    <div class="display-4 text-muted mb-3"><i class="fa-solid fa-calendar-plus text-secondary opacity-50"></i></div>
+                    <h5 class="fw-bold mb-1">No Upcoming Bookings</h5>
+                    <p class="text-muted small mb-4">You haven't booked any upcoming events yet. Discover exciting workshops and concerts!</p>
+                    <a href="{{ url_for('events.explore') }}" class="btn btn-primary btn-sm mx-auto px-4">
+                        <i class="fa-solid fa-compass me-1"></i> Explore Events
+                    </a>
+                </div>
+            {% endif %}
+        </div>
+
+        <!-- 2. COMPLETED TAB -->
+        <div class="tab-pane fade" id="completed-pane" role="tabpanel">
+            {% if completed %}
+                <div class="row g-4">
+                    {% for b in completed %}
+                    <div class="col-lg-6">
+                        <div class="card border-0 shadow-sm rounded-4 h-100 overflow-hidden opacity-85">
+                            <div class="row g-0 h-100">
+                                <div class="col-sm-4 bg-light">
+                                    <img src="{{ b.event.image }}" alt="{{ b.event.title }}" class="img-fluid h-100 w-100" style="object-fit: cover; min-height: 160px; filter: grayscale(40%);">
+                                </div>
+                                <div class="col-sm-8 d-flex flex-column justify-content-between p-3 p-md-4">
+                                    <div>
+                                        <div class="d-flex justify-content-between align-items-start mb-1">
+                                            <span class="badge bg-secondary-subtle text-secondary small">{{ b.event.category.name if b.event.category else 'Event' }}</span>
+                                            <span class="badge bg-info-subtle text-info small"><i class="fa-solid fa-flag-checkered"></i> Completed</span>
+                                        </div>
+                                        <h5 class="fw-bold mb-1">{{ b.event.title }}</h5>
+                                        <div class="small text-muted mb-2">
+                                            Held on {{ b.event.formatted_date }} &bull; {{ b.event.city }}
+                                        </div>
+                                        <div class="small text-secondary">
+                                            Ref: <span class="font-monospace">{{ b.booking_reference }}</span> &bull; {{ b.total_quantity }} Pass(es)
+                                        </div>
+                                    </div>
+                                    <div class="mt-3 pt-3 border-top text-end">
+                                        <a href="{{ url_for('booking.digital_ticket', booking_ref=b.booking_reference) }}" class="btn btn-sm btn-outline-secondary">
+                                            View Past Pass
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div class="card border-0 shadow-sm rounded-4 p-5 text-center my-3">
+                    <p class="text-muted mb-0">No past completed events found.</p>
+                </div>
+            {% endif %}
+        </div>
+
+        <!-- 3. CANCELLED TAB -->
+        <div class="tab-pane fade" id="cancelled-pane" role="tabpanel">
+            {% if cancelled %}
+                <div class="row g-4">
+                    {% for b in cancelled %}
+                    <div class="col-lg-6">
+                        <div class="card border-0 shadow-sm rounded-4 h-100 overflow-hidden border-start border-danger border-4">
+                            <div class="p-4">
+                                <div class="d-flex justify-content-between align-items-start mb-2">
+                                    <h5 class="fw-bold mb-1 text-muted text-decoration-line-through">{{ b.event.title }}</h5>
+                                    <span class="badge bg-danger-subtle text-danger">Cancelled</span>
+                                </div>
+                                <div class="small text-muted mb-3">
+                                    Booking Ref: <span class="font-monospace">{{ b.booking_reference }}</span> &bull; Date: {{ b.event.formatted_date }}
+                                </div>
+                                <div class="bg-light p-3 rounded-3 small">
+                                    <div class="d-flex justify-content-between mb-1">
+                                        <span class="text-muted">Refund Amount:</span>
+                                        <span class="fw-bold text-success">{{ b.total_amount | currency }}</span>
+                                    </div>
+                                    <div class="d-flex justify-content-between mb-1">
+                                        <span class="text-muted">Refund Status:</span>
+                                        <span class="badge bg-success-subtle text-success">
+                                            <i class="fa-solid fa-circle-check"></i> Refunded
+                                        </span>
+                                    </div>
+                                    {% if b.cancellation %}
+                                    <div class="d-flex justify-content-between">
+                                        <span class="text-muted">Refund Ref:</span>
+                                        <span class="font-monospace small">{{ b.cancellation.refund_reference }}</span>
+                                    </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div class="card border-0 shadow-sm rounded-4 p-5 text-center my-3">
+                    <p class="text-muted mb-0">No cancelled bookings.</p>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

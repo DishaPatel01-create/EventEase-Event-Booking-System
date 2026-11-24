@@ -1,0 +1,89 @@
+{% extends 'base.html' %}
+
+{% block title %}Booking Confirmed - {{ booking.booking_reference }}{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-7">
+            <div class="card border-0 shadow-xl rounded-4 text-center p-4 p-md-5">
+                <!-- Success Checkmark Animation Circle -->
+                <div class="mb-4">
+                    <div class="bg-success text-white rounded-circle d-inline-flex align-items-center justify-content-center shadow-lg" style="width: 84px; height: 84px; font-size: 2.5rem; animation: popIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);">
+                        <i class="fa-solid fa-check"></i>
+                    </div>
+                </div>
+
+                <span class="badge bg-success-subtle text-success px-3 py-2 rounded-pill fw-bold mx-auto mb-2">
+                    Payment & Reservation Successful
+                </span>
+                <h2 class="display-6 fw-bold mb-2">Booking Confirmed!</h2>
+                <p class="text-muted mb-4">
+                    We've emailed your booking confirmation and pass to <strong>{{ booking.attendee_email or booking.user.email }}</strong>.
+                </p>
+
+                <!-- Booking Summary Card -->
+                <div class="bg-light rounded-4 p-4 text-start mb-4 border">
+                    <div class="d-flex justify-content-between align-items-center pb-3 mb-3 border-bottom">
+                        <div>
+                            <span class="text-muted small">Booking Reference</span>
+                            <div class="h5 fw-bold font-monospace text-primary mb-0">{{ booking.booking_reference }}</div>
+                        </div>
+                        <span class="badge bg-success text-white px-3 py-2 rounded-pill">Confirmed</span>
+                    </div>
+
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <div class="small text-muted">Event</div>
+                            <div class="fw-bold">{{ booking.event.title }}</div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="small text-muted">Date & Time</div>
+                            <div class="fw-bold">{{ booking.event.formatted_date }} &bull; {{ booking.event.start_time }}</div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="small text-muted">Venue</div>
+                            <div class="fw-bold">{{ booking.event.venue }}, {{ booking.event.city }}</div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="small text-muted">Attendee</div>
+                            <div class="fw-bold">{{ booking.attendee_name or booking.user.name }}</div>
+                        </div>
+                    </div>
+
+                    <hr class="my-3">
+
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <span class="text-muted small">Total Tickets:</span>
+                            <span class="fw-bold ms-1">{{ booking.total_quantity }} Pass(es)</span>
+                        </div>
+                        <div class="text-end">
+                            <span class="text-muted small">Total Paid:</span>
+                            <span class="h5 fw-bold text-success ms-1">{{ booking.total_amount | currency }}</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Action Buttons -->
+                <div class="d-flex flex-column flex-sm-row justify-content-center gap-3">
+                    <a href="{{ url_for('booking.digital_ticket', booking_ref=booking.booking_reference) }}" class="btn btn-primary btn-lg fw-bold px-4">
+                        <i class="fa-solid fa-ticket me-2"></i> View Digital Ticket
+                    </a>
+                    <a href="{{ url_for('booking.my_bookings') }}" class="btn btn-outline-secondary btn-lg fw-semibold px-4">
+                        <i class="fa-solid fa-list-check me-2"></i> Go to My Bookings
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+@keyframes popIn {
+    0% { transform: scale(0); opacity: 0; }
+    80% { transform: scale(1.15); }
+    100% { transform: scale(1); opacity: 1; }
+}
+</style>
+{% endblock %}

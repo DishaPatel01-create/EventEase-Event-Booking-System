@@ -1,0 +1,157 @@
+{% extends 'base.html' %}
+
+{% block title %}Digital Ticket - {{ booking.booking_reference }}{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="d-flex justify-content-between align-items-center mb-4 max-w-680 mx-auto">
+        <a href="{{ url_for('booking.my_bookings') }}" class="btn btn-sm btn-outline-secondary">
+            <i class="fa-solid fa-arrow-left me-1"></i> Back to My Bookings
+        </a>
+        <button type="button" onclick="window.print();" class="btn btn-sm btn-primary">
+            <i class="fa-solid fa-print me-1"></i> Print / Download Ticket
+        </button>
+    </div>
+
+    <!-- Digital Ticket Card Container -->
+    <div class="digital-ticket-container" id="printable-ticket">
+        <!-- Ticket Header -->
+        <div class="ticket-header">
+            <div class="d-flex justify-content-between align-items-start">
+                <div>
+                    <span class="badge bg-white text-primary fw-bold px-3 py-1 rounded-pill mb-2">
+                        Official Entry Pass
+                    </span>
+                    <h3 class="fw-bold text-white mb-1">{{ booking.event.title }}</h3>
+                    <div class="text-white-50 small">
+                        Organized by {{ booking.event.organizer.name }}
+                    </div>
+                </div>
+                <div class="text-end d-none d-sm-block">
+                    <img src="{{ url_for('static', filename='images/favicon.svg') }}" alt="Logo" width="44" height="44">
+                </div>
+            </div>
+        </div>
+
+        <!-- Ticket Body Upper -->
+        <div class="ticket-body">
+            <div class="row g-3 mb-3">
+                <div class="col-6 col-md-4">
+                    <div class="small text-muted text-uppercase fw-bold">Date</div>
+                    <div class="fw-bold fs-6">{{ booking.event.formatted_date }}</div>
+                </div>
+                <div class="col-6 col-md-4">
+                    <div class="small text-muted text-uppercase fw-bold">Time</div>
+                    <div class="fw-bold fs-6">{{ booking.event.start_time }}</div>
+                </div>
+                <div class="col-12 col-md-4">
+                    <div class="small text-muted text-uppercase fw-bold">Status</div>
+                    <span class="badge bg-success-subtle text-success px-2 py-1">
+                        <i class="fa-solid fa-circle-check"></i> Confirmed
+                    </span>
+                </div>
+                <div class="col-12">
+                    <div class="small text-muted text-uppercase fw-bold">Venue & Address</div>
+                    <div class="fw-bold">{{ booking.event.venue }}</div>
+                    <div class="small text-secondary">{{ booking.event.address }}, {{ booking.event.city }}</div>
+                </div>
+            </div>
+
+            <hr class="my-3">
+
+            <div class="row g-3">
+                <div class="col-md-6">
+                    <div class="small text-muted text-uppercase fw-bold">Primary Attendee</div>
+                    <div class="fw-bold fs-6">{{ booking.attendee_name or booking.user.name }}</div>
+                    <div class="small text-muted">{{ booking.attendee_email or booking.user.email }}</div>
+                </div>
+                <div class="col-md-6">
+                    <div class="small text-muted text-uppercase fw-bold">Booking Reference</div>
+                    <div class="fw-bold font-monospace text-primary fs-6">{{ booking.booking_reference }}</div>
+                    <div class="small text-muted">Booked on {{ booking.formatted_booked_at }}</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Ticket Tear-off Divider -->
+        <div class="ticket-divider">
+            <div class="ticket-dashed-line"></div>
+        </div>
+
+        <!-- Ticket Body Lower (Passes & QR Visual) -->
+        <div class="ticket-body pt-3 pb-4 bg-light">
+            <div class="row g-4 align-items-center">
+                <div class="col-md-7">
+                    <h6 class="fw-bold mb-2">Admit Pass Details</h6>
+                    <div class="bg-white p-3 rounded-3 border mb-2">
+                        {% for item in booking.items %}
+                        <div class="d-flex justify-content-between align-items-center mb-1">
+                            <span class="fw-semibold">{{ item.ticket_name }}</span>
+                            <span class="badge bg-primary rounded-pill">{{ item.quantity }} Pass(es)</span>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    <div class="small text-muted">
+                        <i class="fa-solid fa-circle-info me-1"></i> Please present this digital ticket or printed copy at the entrance counter. Valid photo ID required.
+                    </div>
+                </div>
+                <div class="col-md-5 text-center">
+                    <div class="ticket-qr-placeholder bg-white p-3 rounded-3 border shadow-sm">
+                        <!-- Scalable Vector QR Code Graphic Pattern -->
+                        <svg viewBox="0 0 100 100" width="120" height="120" class="mx-auto mb-2">
+                            <!-- QR Matrix Squares -->
+                            <rect x="0" y="0" width="30" height="30" fill="#1E293B" rx="4"/>
+                            <rect x="5" y="5" width="20" height="20" fill="#FFFFFF" rx="2"/>
+                            <rect x="10" y="10" width="10" height="10" fill="#1E293B" rx="1"/>
+
+                            <rect x="70" y="0" width="30" height="30" fill="#1E293B" rx="4"/>
+                            <rect x="75" y="5" width="20" height="20" fill="#FFFFFF" rx="2"/>
+                            <rect x="80" y="10" width="10" height="10" fill="#1E293B" rx="1"/>
+
+                            <rect x="0" y="70" width="30" height="30" fill="#1E293B" rx="4"/>
+                            <rect x="5" y="75" width="20" height="20" fill="#FFFFFF" rx="2"/>
+                            <rect x="10" y="80" width="10" height="10" fill="#1E293B" rx="1"/>
+
+                            <!-- Data cells -->
+                            <rect x="40" y="5" width="6" height="6" fill="#1E293B" />
+                            <rect x="52" y="12" width="6" height="6" fill="#1E293B" />
+                            <rect x="40" y="24" width="6" height="6" fill="#1E293B" />
+                            <rect x="48" y="36" width="6" height="6" fill="#1E293B" />
+                            <rect x="15" y="44" width="6" height="6" fill="#1E293B" />
+                            <rect x="28" y="52" width="6" height="6" fill="#1E293B" />
+                            <rect x="40" y="48" width="8" height="8" fill="#4F46E5" rx="1" />
+                            <rect x="60" y="45" width="6" height="6" fill="#1E293B" />
+                            <rect x="75" y="55" width="6" height="6" fill="#1E293B" />
+                            <rect x="88" y="42" width="6" height="6" fill="#1E293B" />
+                            <rect x="42" y="70" width="6" height="6" fill="#1E293B" />
+                            <rect x="55" y="80" width="6" height="6" fill="#1E293B" />
+                            <rect x="70" y="85" width="6" height="6" fill="#1E293B" />
+                            <rect x="85" y="75" width="6" height="6" fill="#1E293B" />
+                        </svg>
+                        <div class="small font-monospace fw-bold text-muted">{{ booking.booking_reference }}</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+@media print {
+    body * {
+        visibility: hidden;
+    }
+    #printable-ticket, #printable-ticket * {
+        visibility: visible;
+    }
+    #printable-ticket {
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 100%;
+        box-shadow: none;
+        border: 1px solid #ccc;
+    }
+}
+</style>
+{% endblock %}

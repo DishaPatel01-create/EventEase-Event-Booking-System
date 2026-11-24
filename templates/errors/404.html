@@ -1,0 +1,23 @@
+{% extends 'base.html' %}
+
+{% block title %}404 - Page Not Found{% endblock %}
+
+{% block content %}
+<div class="container py-5 text-center">
+    <div class="card border-0 shadow-lg rounded-4 p-5 max-w-500 mx-auto my-5">
+        <div class="display-1 text-primary fw-bold mb-2">404</div>
+        <div class="h3 fw-bold mb-3"><i class="fa-solid fa-compass-slash text-primary me-2"></i> Page Not Found</div>
+        <p class="text-muted mb-4">
+            The event or page you are looking for might have been removed, had its URL changed, or is temporarily unavailable.
+        </p>
+        <div class="d-flex justify-content-center gap-3">
+            <a href="{{ url_for('home.index') }}" class="btn btn-primary">
+                <i class="fa-solid fa-house me-1"></i> Return Home
+            </a>
+            <a href="{{ url_for('events.explore') }}" class="btn btn-outline-primary">
+                <i class="fa-solid fa-compass me-1"></i> Explore Events
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,221 @@
+{% extends 'base.html' %}
+
+{% block title %}Checkout - {{ event.title }}{% endblock %}
+
+{% block content %}
+<div class="bg-white border-bottom py-3">
+    <div class="container">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb mb-0 small">
+                <li class="breadcrumb-item"><a href="{{ url_for('home.index') }}">Home</a></li>
+                <li class="breadcrumb-item"><a href="{{ url_for('events.details', event_id=event.id) }}">{{ event.title }}</a></li>
+                <li class="breadcrumb-item active" aria-current="page">Checkout</li>
+            </ol>
+        </nav>
+    </div>
+</div>
+
+<div class="container py-4">
+    <div class="row g-4">
+        <!-- Left: Attendee Details & Payment Form -->
+        <div class="col-lg-7">
+            <form id="checkout-payment-form" action="{{ url_for('booking.process_checkout') }}" method="POST">
+                <input type="hidden" name="event_id" value="{{ event.id }}">
+                <input type="hidden" name="tickets" value="{{ tickets_json }}">
+                <input type="hidden" name="payment_method" id="selected-payment-method" value="UPI">
+
+                <!-- 1. Attendee Contact Details -->
+                <div class="card border-0 shadow-sm rounded-4 mb-4">
+                    <div class="card-header bg-white border-bottom p-3">
+                        <h5 class="fw-bold mb-0">
+                            <span class="badge bg-primary rounded-circle me-2">1</span> Attendee Contact Details
+                        </h5>
+                    </div>
+                    <div class="card-body p-4">
+                        <div class="row g-3">
+                            <div class="col-12">
+                                <label class="form-label small fw-bold">Primary Attendee Name *</label>
+                                <input type="text" name="attendee_name" class="form-control" value="{{ current_user.name }}" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label small fw-bold">Email Address (for Digital Ticket delivery) *</label>
+                                <input type="email" name="attendee_email" class="form-control" value="{{ current_user.email }}" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label small fw-bold">Mobile Phone Number *</label>
+                                <input type="tel" name="attendee_phone" class="form-control" value="{{ current_user.phone or '+91 ' }}" placeholder="+91 98765 43210" required>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 2. Payment Method Selector (Simulated Gateway) -->
+                <div class="card border-0 shadow-sm rounded-4 mb-4">
+                    <div class="card-header bg-white border-bottom p-3 d-flex justify-content-between align-items-center">
+                        <h5 class="fw-bold mb-0">
+                            <span class="badge bg-primary rounded-circle me-2">2</span> Payment Method
+                        </h5>
+                        <span class="badge bg-info-subtle text-info small">
+                            <i class="fa-solid fa-flask me-1"></i> Simulated Sandbox
+                        </span>
+                    </div>
+                    <div class="card-body p-4">
+                        <!-- UPI Option -->
+                        <div class="payment-method-card active" data-method="UPI">
+                            <input type="radio" name="pay_option" id="opt-upi" checked class="form-check-input mt-0">
+                            <div class="d-flex align-items-center justify-content-between w-100">
+                                <div>
+                                    <div class="fw-bold"><i class="fa-solid fa-mobile-screen-button text-primary me-2"></i> UPI (Google Pay / PhonePe / Paytm / QR)</div>
+                                    <div class="small text-muted">Instant transfer with zero convenience surcharges</div>
+                                </div>
+                                <span class="badge bg-success-subtle text-success">Fastest</span>
+                            </div>
+                        </div>
+
+                        <!-- UPI Subform -->
+                        <div id="subform-upi" class="payment-subform bg-light p-3 rounded-3 mb-3 border">
+                            <label class="form-label small fw-bold">Enter UPI ID / VPA</label>
+                            <div class="input-group input-group-sm mb-2">
+                                <input type="text" class="form-control" placeholder="username@bank (e.g. mobile@upi)">
+                                <span class="input-group-text bg-white"><i class="fa-solid fa-circle-check text-success"></i></span>
+                            </div>
+                            <div class="small text-muted">Simulated test sandbox will approve automatically upon confirmation.</div>
+                        </div>
+
+                        <!-- Credit / Debit Card Option -->
+                        <div class="payment-method-card" data-method="Credit/Debit Card">
+                            <input type="radio" name="pay_option" id="opt-card" class="form-check-input mt-0">
+                            <div class="d-flex align-items-center justify-content-between w-100">
+                                <div>
+                                    <div class="fw-bold"><i class="fa-solid fa-credit-card text-info me-2"></i> Credit or Debit Card</div>
+                                    <div class="small text-muted">Visa, MasterCard, RuPay, Amex</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Card Subform -->
+                        <div id="subform-creditdebitcard" class="payment-subform bg-light p-3 rounded-3 mb-3 border d-none">
+                            <div class="row g-2">
+                                <div class="col-12">
+                                    <label class="form-label small fw-bold">Card Number</label>
+                                    <input type="text" class="form-control form-control-sm" placeholder="•••• •••• •••• ••••" maxlength="19">
+                                </div>
+                                <div class="col-6">
+                                    <label class="form-label small fw-bold">Expiry Date</label>
+                                    <input type="text" class="form-control form-control-sm" placeholder="MM/YY" maxlength="5">
+                                </div>
+                                <div class="col-6">
+                                    <label class="form-label small fw-bold">CVV</label>
+                                    <input type="password" class="form-control form-control-sm" placeholder="•••" maxlength="4">
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Net Banking Option -->
+                        <div class="payment-method-card" data-method="Net Banking">
+                            <input type="radio" name="pay_option" id="opt-netbanking" class="form-check-input mt-0">
+                            <div class="d-flex align-items-center justify-content-between w-100">
+                                <div>
+                                    <div class="fw-bold"><i class="fa-solid fa-building-columns text-warning me-2"></i> Net Banking</div>
+                                    <div class="small text-muted">All major Indian banks supported</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Net Banking Subform -->
+                        <div id="subform-netbanking" class="payment-subform bg-light p-3 rounded-3 mb-3 border d-none">
+                            <label class="form-label small fw-bold">Select Bank</label>
+                            <select class="form-select form-select-sm">
+                                <option>HDFC Bank</option>
+                                <option>State Bank of India (SBI)</option>
+                                <option>ICICI Bank</option>
+                                <option>Axis Bank</option>
+                                <option>Kotak Mahindra Bank</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Submit Button -->
+                <button type="submit" id="pay-and-confirm-btn" class="btn btn-primary w-100 py-3 fs-5 fw-bold shadow-lg d-flex align-items-center justify-content-center gap-2">
+                    <span id="payment-processing-spinner" class="spinner-border spinner-border-sm d-none" role="status" aria-hidden="true"></span>
+                    <span id="payment-btn-text">Pay {{ total_amount | currency }} & Confirm Booking</span>
+                </button>
+                <div class="text-center mt-2 small text-muted">
+                    <i class="fa-solid fa-shield-check text-success me-1"></i> 256-Bit Encrypted Simulated Transaction
+                </div>
+            </form>
+        </div>
+
+        <!-- Right: Order Summary Breakdown -->
+        <div class="col-lg-5">
+            <div class="card border-0 shadow-sm rounded-4 mb-4">
+                <div class="card-header bg-white border-bottom p-3">
+                    <h5 class="fw-bold mb-0">Booking Summary</h5>
+                </div>
+                <div class="card-body p-4">
+                    <!-- Event Info Mini Card -->
+                    <div class="d-flex gap-3 mb-4 pb-3 border-bottom">
+                        <img src="{{ event.image }}" alt="{{ event.title }}" class="rounded-3" style="width: 84px; height: 84px; object-fit: cover;">
+                        <div>
+                            <span class="badge bg-primary-subtle text-primary small">{{ event.category.name if event.category else 'Event' }}</span>
+                            <h6 class="fw-bold mb-1 mt-1">{{ event.title }}</h6>
+                            <div class="small text-muted">
+                                <i class="fa-regular fa-calendar me-1"></i> {{ event.formatted_date }}
+                            </div>
+                            <div class="small text-muted">
+                                <i class="fa-solid fa-location-dot me-1"></i> {{ event.venue }}, {{ event.city }}
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Selected Tickets Breakdown -->
+                    <h6 class="fw-bold mb-3">Selected Tickets</h6>
+                    <div class="table-responsive mb-3">
+                        <table class="table table-sm table-borderless align-middle mb-0">
+                            <tbody>
+                                {% for item in selected_items %}
+                                <tr>
+                                    <td>
+                                        <div class="fw-semibold">{{ item.ticket.name }}</div>
+                                        <div class="small text-muted">{{ item.unit_price | currency }} x {{ item.quantity }}</div>
+                                    </td>
+                                    <td class="text-end fw-bold">
+                                        {{ item.subtotal | currency }}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- Price Calculation Strip -->
+                    <div class="bg-light p-3 rounded-3">
+                        <div class="d-flex justify-content-between mb-2 small">
+                            <span class="text-muted">Tickets Subtotal:</span>
+                            <span class="fw-semibold">{{ subtotal | currency }}</span>
+                        </div>
+                        <div class="d-flex justify-content-between mb-2 small">
+                            <span class="text-muted">Platform Fee (2%):</span>
+                            <span class="fw-semibold">{{ platform_fee | currency }}</span>
+                        </div>
+                        <div class="d-flex justify-content-between mb-2 small">
+                            <span class="text-muted">GST (18% on fee):</span>
+                            <span class="fw-semibold">{{ gst_tax | currency }}</span>
+                        </div>
+                        <hr class="my-2">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <span class="fw-bold fs-6">Grand Total:</span>
+                            <span class="fs-4 fw-bold text-primary">{{ total_amount | currency }}</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script src="{{ url_for('static', filename='js/booking.js') }}"></script>
+{% endblock %}

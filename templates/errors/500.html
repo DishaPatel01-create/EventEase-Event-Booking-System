@@ -1,0 +1,18 @@
+{% extends 'base.html' %}
+
+{% block title %}500 - Internal Server Error{% endblock %}
+
+{% block content %}
+<div class="container py-5 text-center">
+    <div class="card border-0 shadow-lg rounded-4 p-5 max-w-500 mx-auto my-5">
+        <div class="display-1 text-warning fw-bold mb-2">500</div>
+        <div class="h3 fw-bold mb-3"><i class="fa-solid fa-triangle-exclamation text-warning me-2"></i> System Error</div>
+        <p class="text-muted mb-4">
+            An unexpected error occurred while processing your request. Our engineering team has been notified.
+        </p>
+        <a href="{{ url_for('home.index') }}" class="btn btn-primary">
+            <i class="fa-solid fa-house me-1"></i> Return to Safety (Home)
+        </a>
+    </div>
+</div>
+{% endblock %}

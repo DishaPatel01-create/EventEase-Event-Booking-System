@@ -1,0 +1,200 @@
+{% extends 'base.html' %}
+
+{% block title %}Platform Admin Console - {{ app_name }}{% endblock %}
+
+{% block content %}
+<div class="bg-dark text-white py-4 border-bottom">
+    <div class="container">
+        <div class="d-flex justify-content-between align-items-center">
+            <div>
+                <span class="badge bg-danger mb-1"><i class="fa-solid fa-shield-halved me-1"></i> Root Administration</span>
+                <h1 class="h3 fw-bold mb-0">Platform Overview & Management</h1>
+            </div>
+            <span class="badge bg-light text-dark px-3 py-2 fs-7 font-monospace">Role: SUPER_ADMIN</span>
+        </div>
+    </div>
+</div>
+
+<div class="container py-4">
+    <!-- Stat Cards -->
+    <div class="row g-3 mb-4">
+        <div class="col-6 col-md-4 col-lg-2">
+            <div class="stat-card">
+                <span class="stat-label">Total Users</span>
+                <div class="stat-value text-primary stat-counter" data-target="{{ total_users }}">0</div>
+            </div>
+        </div>
+        <div class="col-6 col-md-4 col-lg-2">
+            <div class="stat-card">
+                <span class="stat-label">Organizers</span>
+                <div class="stat-value text-info stat-counter" data-target="{{ total_organizers }}">0</div>
+            </div>
+        </div>
+        <div class="col-6 col-md-4 col-lg-2">
+            <div class="stat-card">
+                <span class="stat-label">Attendees</span>
+                <div class="stat-value text-success stat-counter" data-target="{{ total_attendees }}">0</div>
+            </div>
+        </div>
+        <div class="col-6 col-md-4 col-lg-3">
+            <div class="stat-card">
+                <span class="stat-label">Total Events</span>
+                <div class="stat-value text-warning stat-counter" data-target="{{ total_events }}">0</div>
+            </div>
+        </div>
+        <div class="col-12 col-md-4 col-lg-3">
+            <div class="stat-card">
+                <span class="stat-label">Total Platform Volume</span>
+                <div class="stat-value text-success stat-counter" data-target="{{ total_revenue }}" data-prefix="₹">0</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Admin Tabs: Users, Events, Bookings -->
+    <ul class="nav nav-tabs mb-4" id="adminTabs" role="tablist">
+        <li class="nav-item" role="presentation">
+            <button class="nav-link active fw-bold" id="users-tab" data-bs-toggle="tab" data-bs-target="#users-pane" type="button">
+                <i class="fa-solid fa-users me-1"></i> User Accounts ({{ users | length }})
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link fw-bold" id="events-tab" data-bs-toggle="tab" data-bs-target="#events-pane" type="button">
+                <i class="fa-solid fa-calendar-days me-1"></i> All Platform Events ({{ events | length }})
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link fw-bold" id="bookings-tab" data-bs-toggle="tab" data-bs-target="#bookings-pane" type="button">
+                <i class="fa-solid fa-receipt me-1"></i> Recent Platform Bookings ({{ bookings | length }})
+            </button>
+        </li>
+    </ul>
+
+    <div class="tab-content" id="adminTabsContent">
+        <!-- 1. USERS TAB -->
+        <div class="tab-pane fade show active" id="users-pane">
+            <div class="card border-0 shadow-sm rounded-4">
+                <div class="table-responsive">
+                    <table class="table table-custom table-hover mb-0">
+                        <thead>
+                            <tr>
+                                <th>User</th>
+                                <th>Email</th>
+                                <th>Current Role</th>
+                                <th>Created</th>
+                                <th>Role Modification</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for u in users %}
+                            <tr>
+                                <td class="fw-bold">{{ u.name }}</td>
+                                <td>{{ u.email }}</td>
+                                <td>
+                                    <span class="badge bg-primary-subtle text-primary">{{ u.role | capitalize }}</span>
+                                </td>
+                                <td class="small text-muted">{{ u.created_at.strftime('%d %b %Y') if u.created_at else '-' }}</td>
+                                <td>
+                                    {% if u.id != current_user.id %}
+                                    <form action="{{ url_for('admin.update_user_role', user_id=u.id) }}" method="POST" class="d-inline-flex gap-2 align-items-center">
+                                        <select name="role" class="form-select form-select-sm w-auto">
+                                            <option value="attendee" {% if u.role == 'attendee' %}selected{% endif %}>Attendee</option>
+                                            <option value="organizer" {% if u.role == 'organizer' %}selected{% endif %}>Organizer</option>
+                                            <option value="admin" {% if u.role == 'admin' %}selected{% endif %}>Admin</option>
+                                        </select>
+                                        <button type="submit" class="btn btn-sm btn-outline-secondary">Update</button>
+                                    </form>
+                                    {% else %}
+                                    <span class="small text-muted fst-italic">Logged-in Super Admin</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- 2. EVENTS TAB -->
+        <div class="tab-pane fade" id="events-pane">
+            <div class="card border-0 shadow-sm rounded-4">
+                <div class="table-responsive">
+                    <table class="table table-custom table-hover mb-0">
+                        <thead>
+                            <tr>
+                                <th>Event Title</th>
+                                <th>Organizer</th>
+                                <th>Category & City</th>
+                                <th>Date</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for e in events %}
+                            <tr>
+                                <td class="fw-bold">{{ e.title }}</td>
+                                <td>{{ e.organizer.name }} ({{ e.organizer.email }})</td>
+                                <td>{{ e.category.name if e.category else 'General' }} &bull; {{ e.city }}</td>
+                                <td class="small">{{ e.formatted_date }}</td>
+                                <td><span class="badge {{ e.status | badge_status }}">{{ e.status | capitalize }}</span></td>
+                                <td>
+                                    <div class="d-flex gap-2">
+                                        <a href="{{ url_for('events.details', event_id=e.id) }}" class="btn btn-sm btn-light border" target="_blank">
+                                            <i class="fa-solid fa-arrow-up-right-from-square"></i>
+                                        </a>
+                                        <form action="{{ url_for('admin.delete_event', event_id=e.id) }}" method="POST" onsubmit="return confirm('Confirm platform deletion of this event?');">
+                                            <button type="submit" class="btn btn-sm btn-outline-danger">
+                                                <i class="fa-solid fa-trash"></i>
+                                            </button>
+                                        </form>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- 3. BOOKINGS TAB -->
+        <div class="tab-pane fade" id="bookings-pane">
+            <div class="card border-0 shadow-sm rounded-4">
+                <div class="table-responsive">
+                    <table class="table table-custom table-hover mb-0">
+                        <thead>
+                            <tr>
+                                <th>Reference</th>
+                                <th>Event</th>
+                                <th>Booked By</th>
+                                <th>Tickets</th>
+                                <th>Amount</th>
+                                <th>Payment Method</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for b in bookings %}
+                            <tr>
+                                <td><span class="font-monospace fw-bold text-primary">{{ b.booking_reference }}</span></td>
+                                <td class="fw-semibold">{{ b.event.title }}</td>
+                                <td>{{ b.attendee_name or b.user.name }}</td>
+                                <td>{{ b.total_quantity }}</td>
+                                <td class="fw-bold">{{ b.total_amount | currency }}</td>
+                                <td><span class="badge bg-light text-dark border">{{ b.payment.payment_method if b.payment else 'UPI' }}</span></td>
+                                <td><span class="badge {{ b.status | badge_status }}">{{ b.status | capitalize }}</span></td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% block extra_scripts %}
+<script src="{{ url_for('static', filename='js/dashboard.js') }}"></script>
+{% endblock %}
+{% endblock %}
